@@ -1,0 +1,122 @@
+import copy
+
+gameStatus = 0 # Is the game over?
+turn = "X" # Who turn it is
+board = [[" ", " ", " "], [" ", " ", " "], [" ", " ", " "]] # The board
+
+nextMoves = [] # The options the ai has
+
+def printBoard(board): # prints the board in a readable way
+    for row in board:
+        print(row)
+
+
+def ai(board, turn, value,depth):  # This is the minimax algorthim
+    global nextMoves
+    AvailableMoves = []
+
+    for row in range(3): # adds all available moves to AvailableMoves
+        for col in range(3):
+            if board[row][col] == " ":
+                AvailableMoves.append((row, col))
+
+    if turn == 'O': # switch turns
+        nextturn = 'X'
+    else:
+        nextturn = 'O'
+
+    bestmove = []
+    for row, col in AvailableMoves: # goes through all available moves and gives them a value
+        board[row][col] = turn
+        if value == 0:
+            value = win(board, "O") + win(board, "X") # adds the value of the board
+        bm = ai(board,nextturn, value,depth+1) # recursive call
+        bestmove.append(bm) # adds the value of the move to bestmove
+        board[row][col] = (" ") # trys a diffrent move
+
+    if depth == 1:
+        nextMoves = bestmove # saves all the moves on the first depth
+    if AvailableMoves == []: # no more moves so 
+        bestmove.append(value) 
+
+    if turn == 'X': # minimax selection
+        return min(bestmove)
+    else:
+        return max(bestmove)
+
+
+def userMove(turn):  # the player selects thier move
+    print("Where would you like to go", turn)
+
+    try:  # makes sure the program doesnt blow up after a string
+        Row = int(input("What row : ")) - 1
+        Col = int(input("What collum : ")) - 1
+    except ValueError:  # try again if its a string
+        print("That move is invalid  ")
+        return userMove(turn)
+
+    if (Row < 0 or Row > 2 or Col < 0 or Col > 2 or board[Row][Col] != (" ")):  # checks if its a valid move:
+        print("That move is invalid  ")
+        return userMove(turn)
+    
+    return Row, Col
+
+
+def win(board, turn):  # checks if game is finished
+    if turn == 'X': # makes sure the ai winning is positive
+        value = -1
+    else:
+        value = 1
+
+    for row in range(3): # checks rows
+        if board[row][0] == (turn) and board[row][1] == (turn) and board[row][2] == (turn):
+            return value
+    for col in range(3): # checks collums
+        if board[0][col] == (turn) and board[1][col] == (turn) and board[2][col] == (turn):
+            return value
+        
+    if board[0][0] == (turn) and board[1][1] == (turn) and board[2][2] == (turn): # checks diagonals
+        return value
+    elif board[2][0] == (turn) and board[1][1] == (turn) and board[0][2] == (turn): 
+        return value
+    
+    return 0 # else , no win game continues
+
+AvailableMoves = [] # available moves
+count = 0 # number of moves made
+printBoard(board) 
+
+# the player does their turn
+while gameStatus == 0 and count !=9:  # has game finish?
+    count += 1
+    Row, Col = userMove(turn)
+    board[Row][Col] = turn
+    gameStatus = win(board,turn)
+    printBoard(board)
+    turn = ("O")
+
+    # the ai does its turn
+    if gameStatus == 0 and count != 9 :  # has game finish?
+        count += 1
+        print("AI is thinking...")
+        ValueOfBm = ai(board, turn, 0,1) # gets the value of the best move
+        AvailableMoves = []
+        for row in range(3): # adds all available moves to AvailableMoves
+            for col in range(3):
+                if board[row][col] == " ":
+                    AvailableMoves.append((row, col))
+        Row,Col = AvailableMoves[nextMoves.index(ValueOfBm)] # finds the move that has that value
+        print("The ai wants to go",Row+1,Col+1)
+        board[Row][Col] = ("O")
+        printBoard(board)
+        gameStatus = win(board,turn)
+        turn = ("X")
+
+print("")
+print("Game Over")
+if gameStatus == 0: # who won?
+    print("Its a draw!")
+elif turn == "O":
+    print("X wins!")
+else:
+    print("The ai wins!")
